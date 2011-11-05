@@ -1,3 +1,4 @@
+99lp  - 99 Lisp Problems
 ca    - An Introduction to Computer Science Using Scheme
 eopl  - Essentials of Programming Languages
 htdp  - How to Design Programs
@@ -6,8 +7,11 @@ LoL   - Let over Lambda
 lol   - Land of Lisp
 mop   - The Art of the MetaObject Protocol
 onlisp- OnLisp
+pcl   - Practical Common LISP
+pe    - Project Euler 
 plai  - Programming Languages: Application and Interpretation
 sicp  - Structure and Interpretation of Computer Programs
+tjoc  - The Joy of Clojure
 tls   - The Little Schemer
 trs   - The Reasoned Schemer
 tss   - The Seasoned Schemer
