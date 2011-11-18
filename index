@@ -1,5 +1,7 @@
 99lp  - 99 Lisp Problems
+aiama - Artificial Intelligence - A Modern Approach
 ca    - An Introduction to Computer Science Using Scheme
+clisc - Common Lisp - A Gentle introduction to Symbolic Computation
 eopl  - Essentials of Programming Languages
 htdp  - How to Design Programs
 lisp  - Lisp in Small Pieces
@@ -7,10 +9,12 @@ LoL   - Let over Lambda
 lol   - Land of Lisp
 mop   - The Art of the MetaObject Protocol
 onlisp- OnLisp
+paip  - Paradigms of Artificial Intelligence Programming: Case Studies in Common Lisp
 pcl   - Practical Common LISP
 pe    - Project Euler 
 plai  - Programming Languages: Application and Interpretation
 sicp  - Structure and Interpretation of Computer Programs
+teai  - The Elements of Artificial Intelligence
 tjoc  - The Joy of Clojure
 tls   - The Little Schemer
 trs   - The Reasoned Schemer
