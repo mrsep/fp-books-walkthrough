@@ -8,6 +8,8 @@
 (define U fail)
 (define S succeed)
 
+; = = = = = = = = = = = = = = = = = = = = = = = = = =
+
 ; There is no solution if all goals fail.
 (run* (q) U)
 ; > ()

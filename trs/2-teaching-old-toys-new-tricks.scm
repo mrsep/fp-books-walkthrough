@@ -5,6 +5,12 @@
 (load "mkextraforms.scm")
 (load "mkprelude.scm")
 
+; the goals which succeed and fail
+(define U fail)
+(define S succeed)
+
+; = = = = = = = = = = = = = = = = = = = = = = = = = =
+
 ; r gets associated with the car of (a c o r n).
 (run* (r)
       (caro '(a c o r n) r))
