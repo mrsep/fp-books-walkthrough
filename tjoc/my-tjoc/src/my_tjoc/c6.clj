@@ -26,7 +26,7 @@
   (defer-expensive
     (delay :cheap)
     (delay (do (Thread/sleep 5000) :expensive)))
-  
+
   (defer-expensive
     (delay false)
     (delay (do (Thread/sleep 5000) :expensive))))
