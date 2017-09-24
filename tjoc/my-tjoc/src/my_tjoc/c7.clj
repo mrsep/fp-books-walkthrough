@@ -2,28 +2,45 @@
 
 ;;; chapter 7 - Functional Programming
 
-;; functions are first class citizens
+;; functions are first class citizens - they can be handled like any other data type
 ;; create, store, pass and return them
 
 ; collections can act as functions
 (map [:chthon :phthor :beowulf :grendel] '(1 3))
 
-; composition of functions with comp
+; function application with apply
+(comment
+  (apply + '(5 6))
+  )
 
+; evaluation of S-exp
+(comment
+  ; data is code
+  (eval '(+ 5 6))
+  )
+
+; composition of functions with comp
 (def add4 (comp inc inc inc inc))
 
-(defn fnth [f n] 
-  (apply comp (take n (repeat f))))
+(def num-id (apply comp (list inc dec inc dec)))
+
+(defn fnth [f n]
+  (apply comp
+         ; handle functions like data
+         (take n (repeat f))))
 
 (comment
   (add4 1)
-  ((fnth inc 4) 0))
+  (num-id 42)
+  ; create a function an immediately call it
+  ((fnth inc 4) 0)
+  )
 
 ; partial functions (which is not currying)
-(def incsum (partial + 1) )
+(def incsum (partial + 1))
+(def prefix-a (partial cons "a"))
 
-; also: functions can act as data, and they are data
-
+; also: functions can act as data, and they are data (stored in a map)
 (defn join
   {:test (fn []
            (assert
@@ -36,9 +53,22 @@
   (t/run-tests)
 )
 
-; Higher order functions
+; Higher order functions (prefer them when processing sequences)
+; map filter reduce sort-by for some repeatedly keep take-while drop-while
 
+; write pure functions to achieve referential transparency
 
+; pre and post conditions
+(defn slope [p1 p2]
+  {:pre [(not= p1 p2) (vector? p1) (vector? p2)]
+   :post [(float? %)]}
+  (/ (- (p2 1) (p1 1))
+     (- (p2 0) (p1 0))))
+
+; decoupled constraints for the function f
+(defn constraint [f m]
+  {:post [(= (:meat %) (:meat m))]}
+  (f m))
 
 ;; lexical closures
 (def times-two
@@ -78,7 +108,7 @@
 (defn pow-mundane [base exp]
   (if (zero? exp)
     1
-    (* base (pow base (dec exp)))))
+    (* base (pow-mundane base (dec exp)))))
 
 ; tail recursion with TCO
 (defn pow [base exp]
@@ -114,6 +144,7 @@
     (trampoline ff-open commands)))
 
 ; Continuation passing style
+; no tail call optimization
 (defn fac-cps [n k]
   (letfn [(cont [v] (do  (println "cont" n v k)
                          (k (* n v))))]
@@ -125,5 +156,91 @@
 
 (defn fac [n]
   (fac-cps n identity))
+
+(defn mk-cps [accept? end-value kend kont]
+  (fn [n]
+    ((fn [n k]
+       (let [cont (fn [v] (k (kont v n)))]
+         (if (accept? n)
+           (k end-value)
+           (recur (dec n) cont))))
+     n kend)))
+
+; call hierarchy of mk-cps
+;cont1 = kend . f
+;cont2 = cont1 . f = kend . f . f
+;...
+;contn = contn-1 . f = kend . f^n
+
+(def fac (mk-cps zero? 1 identity #(* %1 %2)))
+(def tri (mk-cps zero? 1 dec #(+ %1 %2)))
+
+;; A* path-finding
+
+(defn neighbors
+  ([size yx] (neighbors [[-1 0] [1 0] [0 -1] [0 1]] size yx))
+  ([deltas size yx]
+   (filter (fn [new-yx]
+             (every? #(< -1 % size) new-yx))
+           (map (comp vec #(map + yx %))
+                deltas))))
+
+(def world [[  1   1   1   1   1]
+            [999 999 999 999   1]
+            [  1   1   1   1   1]
+            [  1 999 999 999 999]
+            [  1   1   1   1   1]])
+
+(defn estimate-cost [step-cost-est size y x]
+  (* step-cost-est
+     (- (+ size size) y x 2)))
+
+(defn path-cost [node-cost cheapest-nbr]
+  (+ node-cost
+     (:cost cheapest-nbr 0)))
+
+(defn total-cost [newcost step-cost-est size y x]
+  (+ newcost
+     (estimate-cost step-cost-est size y x)))
+
+(defn min-by [f coll]
+  (when (seq coll)
+    (reduce (fn [min this]
+              (if (> (f min) (f this)) this min))
+            coll)))
+
+(defn astar [start-yx step-est cell-costs]
+  (let [size (count cell-costs)]
+    (loop [steps 0
+           routes (vec (replicate size (vec (replicate size nil))))
+           work-todo (sorted-set [0 start-yx])]
+      (if (empty? work-todo)
+        [(peek (peek routes)) :steps steps] ; terminate with best route
+        (let [[_ yx :as work-item] (first work-todo)
+              rest-work-todo (disj work-todo work-item)
+              nbr-yxs (neighbors size yx)
+              cheapest-nbr (min-by :cost
+                                   (keep #(get-in routes %)
+                                         nbr-yxs))
+              newcost (path-cost (get-in cell-costs yx) cheapest-nbr)
+              oldcost (:cost (get-in routes yx))]
+          (if (and oldcost (>= newcost oldcost))
+            (recur (inc steps) routes rest-work-todo)
+            (recur (inc steps)
+                   (assoc-in routes yx
+                             {:cost newcost
+                              :yxs (conj (:yxs cheapest-nbr [])
+                                         yx)})
+                   (into rest-work-todo
+                         (map
+                          (fn [w]
+                            (let [[y x] w]
+                              [(total-cost newcost step-est size y x) w]))
+                          nbr-yxs)))))))))
+
+(defn random-world [size maxn]
+  (vec (repeatedly size
+                   #(vec (repeatedly size
+                                     (partial rand-int maxn))))))
 
 nil
