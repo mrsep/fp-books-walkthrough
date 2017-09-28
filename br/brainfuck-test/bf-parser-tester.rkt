@@ -1,3 +1,3 @@
 #lang br
-(require "bf-parser.rkt")
+(require "../brainfuck/bf-parser.rkt")
 (parse-to-datum "++++-+++-++-++[>++++-+++-++-++<-]>.")
