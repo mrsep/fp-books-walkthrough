@@ -18,7 +18,7 @@
             ([bf-func (in-list bf-funcs)])  ; iterate over the list of bf-funcs
     (apply bf-func current-apl)))           ; loop body: applying the current bf-func to the current state
                                             ; the result is a two-list updating the accumulator
-                  
+
 (define-macro (bf-program OP-OR-LOOP-ARG ...)
   #'(begin
       (define first-apl (list (make-vector 30000 0) 0))
