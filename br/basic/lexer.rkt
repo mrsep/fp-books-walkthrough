@@ -10,7 +10,7 @@
    [whitespace (token lexeme #:skip? #t)] ; ignore this token in the parser
    [(from/stop-before "rem" "\n") (token 'REM lexeme)]
    [(:or "print" "goto" "end"
-         "+" ":" ";") (token lexeme lexeme)]
+         "+" ":" ";") (token lexeme lexeme)] ; strings become tokens
    [digits (token 'INTEGER (string->number lexeme))]
    [(:or (:seq (:? digits) "." digits)
          (:seq digits "."))
