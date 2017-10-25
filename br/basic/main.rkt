@@ -9,3 +9,11 @@
 
 (module+ reader
   (provide read-syntax))
+
+(define (get-info port mod line col pos)
+  (define (handle-query key default)
+    (case key
+      [(color-lexer)
+       (dynamic-require 'basic/colorer 'basic-colorer)]
+      [else default]))
+  handle-query)
