@@ -1,6 +1,10 @@
 #lang br
 (require brag/support)
 
+(define-lex-abbrev reserved-terms (:or "print" "goto" "end"
+                                       "input" "let"
+                                       "=" "+" ":" ";"
+                                       "-" "*" "/" "^" "mod" "(" ")"))
 (define-lex-abbrev digits (:+ (char-set "0123456789")))
 
 (define basic-lexer
@@ -9,8 +13,9 @@
    ["\n" (token 'NEWLINE lexeme)]
    [whitespace (token lexeme #:skip? #t)] ; ignore this token in the parser
    [(from/stop-before "rem" "\n") (token 'REM lexeme)]
-   [(:or "print" "goto" "end"
-         "+" ":" ";") (token lexeme lexeme)] ; strings become tokens
+   [reserved-terms (token lexeme lexeme)] ; strings become tokens
+   [(:seq alphabetic (:* (:or alphabetic numeric "$")))
+    (token 'ID (string->symbol lexeme))]
    [digits (token 'INTEGER (string->number lexeme))]
    [(:or (:seq (:? digits) "." digits)
          (:seq digits "."))
