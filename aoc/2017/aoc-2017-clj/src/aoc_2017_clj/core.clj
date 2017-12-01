@@ -7,26 +7,44 @@
 (defn string->digitseq [str]
   (map #(Character/digit % 10) (seq str)))
 
-(defn day1 [str]
-  (let [digit-seq (string->digitseq str)]
-    (loop [rst     digit-seq
-           current (first digit-seq)
-           nxt     (next  digit-seq)
-           sum     0]
-      (if-not nxt
-        (if (== current (first digit-seq))
-          (+ sum current)
-          sum))
-      (recur (rest rst)
-             (next rst)
-             (nnext rst)
-             (if (== current nxt)
-               (+ sum current)
-               sum)))))
+(defn string->digitvec [str]
+  (mapv #(Character/digit % 10) (seq str)))
 
-      
+(defn day1-part1 [str]
+  "still too ugly!"
+  (let [digit-seq (string->digitseq str)]
+    (if-not (and (first digit-seq)
+                 (second digit-seq))
+      0
+      (loop [rst     digit-seq
+             current (first digit-seq)
+             nxt     (second digit-seq)
+             sum     0]
+        (if-not nxt
+          (if (== current (first digit-seq))
+            (+ sum current)
+            sum)
+          (recur (rest rst)
+                 (second rst)
+                 (second (next rst))
+                 (if (== current nxt)
+                   (+ sum current)
+                   sum)))))))
+
+(defn day1-part2 [str]
+  (let [dv (string->digitvec str)
+        cnt (count dv)
+        halflen (/ cnt 2)
+        xform (comp (map #(vector (nth dv %)
+                                  (nth dv (mod (+ % halflen) cnt))))
+                    (filter #(== (nth % 0) (nth % 1)))
+                    (map first))]
+    (transduce xform + (range cnt))))
+
 
 (defn -main [& args]
-  (println (string->digitseq "1234"))
-  (println (day1 "1122"))
-  (println (day1 input)))
+  (println (day1-part1 "1"))
+  (println (day1-part1 "22"))
+  (println (day1-part1 "3344"))
+  (println (day1-part1 input))
+  (println (day1-part2 input)))
