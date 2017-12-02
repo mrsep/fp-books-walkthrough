@@ -10,36 +10,21 @@
 (defn string->digitvec [str]
   (mapv #(Character/digit % 10) (seq str)))
 
-(defn day1-part1 [str]
-  "still too ugly!"
-  (let [digit-seq (string->digitseq str)]
-    (if-not (and (first digit-seq)
-                 (second digit-seq))
-      0
-      (loop [rst     digit-seq
-             current (first digit-seq)
-             nxt     (second digit-seq)
-             sum     0]
-        (if-not nxt
-          (if (== current (first digit-seq))
-            (+ sum current)
-            sum)
-          (recur (rest rst)
-                 (second rst)
-                 (second (next rst))
-                 (if (== current nxt)
-                   (+ sum current)
-                   sum)))))))
-
-(defn day1-part2 [str]
+(defn day1-uni [str offset-fn]
   (let [dv (string->digitvec str)
         cnt (count dv)
-        halflen (/ cnt 2)
-        xform (comp (map #(vector (nth dv %)
-                                  (nth dv (mod (+ % halflen) cnt))))
-                    (filter #(== (nth % 0) (nth % 1)))
-                    (map first))]
+        offset (offset-fn dv)
+        xform (comp (filter #(== (nth dv %)
+                                 (nth dv (mod (+ % offset)
+                                              cnt))))
+                    (map #(nth dv %)))]
     (transduce xform + (range cnt))))
+
+(defn day1-part1 [str]
+  (day1-uni str (fn [& params] 1)))
+
+(defn day1-part2 [str]
+  (day1-uni str #(/ (count %) 2)))
 
 (defn string->int [str]
   (Integer/parseInt (str/trim str)))
