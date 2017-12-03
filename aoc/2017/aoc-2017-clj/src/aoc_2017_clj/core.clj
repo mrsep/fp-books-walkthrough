@@ -61,9 +61,23 @@
         final (map #(transduce row-xform2 + %) all)]
     (reduce + final)))
 
+(defn getPathLength [n]
+  (let [k (Math/ceil (/ (dec (Math/sqrt n)) 2))
+        big (Math/pow (inc (* 2 k)) 2)
+        small (inc(Math/pow (dec (* 2 k))2))
+        cnt (* 8 k)
+        diags (mapv #(- big (* 2 k %)) [0 1 2 3])
+        diags_dist (map #(Math/abs (- n %)) (conj diags (dec small)))
+        small_diag_dist (apply min diags_dist)]
+    (- (* 2 k) small_diag_dist)))
+
+(defn day3-part1 [n]
+  (getPathLength n))
+
 (defn -main [& args]
   (println "day1:1" (day1-part1 (slurp (io/resource "input-day1.txt"))))
   (println "day1:2" (day1-part2 (slurp (io/resource "input-day1.txt"))))
   (println "day2:1" (day2-part1 (slurp (io/resource "input-day2.txt"))))
   (println "day2:2" (day2-part2 (slurp (io/resource "input-day2.txt"))))
+  (println "day3:1" (day3-part1 265149))
   )
