@@ -61,6 +61,18 @@
         final (map #(transduce row-xform2 + %) all)]
     (reduce + final)))
 
+; k=0 ring has 1 element
+; kth ring has 4*2*k elements
+; smallest number on kth ring: 1+(2*k-1)^2
+; biggest number on kth ring: (2*k+1)^2
+; diagonals: biggest number - {0,1,2,3}*2*k
+; path length from diagonal to axes: k
+
+; Given: a number n >= 1
+; find k such that: 1+(2*k-1) ^ 2 <= n <= (2*k+1) ^ 2
+; k <= |_(sqrt(n-1)+1)/2_| and /(sqrt(n) - 1)/2\ <= k
+; find distance from diagonal
+
 (defn getPathLength [n]
   (let [k (Math/ceil (/ (dec (Math/sqrt n)) 2))
         big (Math/pow (inc (* 2 k)) 2)
@@ -74,10 +86,28 @@
 (defn day3-part1 [n]
   (getPathLength n))
 
+(defn day4-part1 [str]
+  (let [phrases-vec (mapv #(str/split % #" ") (str/split-lines str))
+        phrases-set (map #(into #{} %) phrases-vec)
+        valid (map #(== (count %1) (count %2)) phrases-vec phrases-set)]
+    (count (filter identity valid))))
+
+(defn string->charset [str]
+  (into #{} (seq str)))
+
+(defn day4-part2 [str]
+  (let [phrases-vec (mapv #(map string->charset (str/split % #" ")) (str/split-lines str))
+        phrases-set (map #(into #{} %) phrases-vec)
+        valid (map #(== (count %1) (count %2)) phrases-vec phrases-set)]
+    (count (filter identity valid))))
+
 (defn -main [& args]
   (println "day1:1" (day1-part1 (slurp (io/resource "input-day1.txt"))))
   (println "day1:2" (day1-part2 (slurp (io/resource "input-day1.txt"))))
   (println "day2:1" (day2-part1 (slurp (io/resource "input-day2.txt"))))
   (println "day2:2" (day2-part2 (slurp (io/resource "input-day2.txt"))))
   (println "day3:1" (day3-part1 265149))
+  (println "day3:2" "Not yet solved!")
+  (println "day4:1" (day4-part1 (slurp (io/resource "input-day4.txt"))))
+  (println "day4:2" (day4-part2 (slurp (io/resource "input-day4.txt"))))
   )
