@@ -132,6 +132,31 @@
            (+ index current-offset)
            (inc iter)))))))
 
+(defn redistribute [banks]
+  (let [indexed-banks (into (sorted-map-by >) (zipmap (range (count banks)) banks))
+        max-bank (key (apply max-key val indexed-banks))
+        max-val (nth banks max-bank)]
+    (loop [new-banks (assoc banks max-bank 0)
+           remaining max-val
+           index (mod (inc max-bank)
+                      (count banks))]
+      (if (zero? remaining)
+        new-banks
+        (recur (update new-banks index inc)
+               (dec remaining)
+               (mod (inc index)
+                    (count banks)))))))
+
+(defn day6 [str]
+  (loop [banks       (mapv string->int (str/split str #"\s"))
+         banks-set   #{}
+         banks-cycle {}]
+    (if (banks-set banks)
+      {:cycles (count banks-set) :loop-length (- (count banks-set) (banks-cycle banks))}
+      (recur (redistribute banks)
+             (conj banks-set banks)
+             (assoc banks-cycle banks (count banks-set))))))
+
 (defn -main [& args]
   (println "day1:1" (day1-part1 (slurp (io/resource "input-day1.txt"))))
   (println "day1:2" (day1-part2 (slurp (io/resource "input-day1.txt"))))
@@ -143,4 +168,5 @@
   (println "day4:2" (day4-part2 (slurp (io/resource "input-day4.txt"))))
   (println "day5:1" (day5-part1 (slurp (io/resource "input-day5.txt"))))
   (println "day5:2" (day5-part2 (slurp (io/resource "input-day5.txt"))))
+  (println "day6" (day6 (slurp (io/resource "input-day6.txt"))))
   )
