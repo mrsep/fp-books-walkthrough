@@ -2,6 +2,8 @@
   (:gen-class)
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
+            [clojure.zip :as zip]
+            [instaparse.core :as insta :refer [defparser]]
             [clojure.math.combinatorics :as combo]))
 
 (defn string->digitseq [str]
@@ -157,6 +159,32 @@
              (conj banks-set banks)
              (assoc banks-cycle banks (count banks-set))))))
 
+(def day7-grammar-res (io/resource "day7.bnf"))
+
+(defparser day7-parser (slurp day7-grammar-res)
+  :string-ci true
+  :auto-whitespace :standard
+  :output-format :enlive)
+
+(defn day7-parse [str]
+  (insta/transform
+   {:ID (comp str/join vector)
+    :WEIGHT (comp string->int str/join vector)
+    :PROGRAM vector}
+   (day7-parser str)))
+
+(defn day7 [str]
+  (let [program-list (day7-parse str)
+        program-weight (apply hash-map (flatten (map #(take 2 %) program-list)))
+        program-childs (let [xform (comp (filter #(> (count %) 2))
+                                         (map #(vector (first %) (into #{} (nnext %)))))]
+                         (into (hash-map) (transduce xform conj program-list)))
+        program-all    (into #{} (keys program-weight))
+        non-root (reduce clojure.set/union (vals program-childs))
+        root     (clojure.set/difference program-all non-root)]
+    root))
+
+
 (defn -main [& args]
   (println "day1:1" (day1-part1 (slurp (io/resource "input-day1.txt"))))
   (println "day1:2" (day1-part2 (slurp (io/resource "input-day1.txt"))))
@@ -168,5 +196,6 @@
   (println "day4:2" (day4-part2 (slurp (io/resource "input-day4.txt"))))
   (println "day5:1" (day5-part1 (slurp (io/resource "input-day5.txt"))))
   (println "day5:2" (day5-part2 (slurp (io/resource "input-day5.txt"))))
-  (println "day6" (day6 (slurp (io/resource "input-day6.txt"))))
+  (println "day6"   (day6 (slurp (io/resource "input-day6.txt"))))
+  (println "day7"   (day7 (slurp (io/resource "input-day7.txt"))))
   )

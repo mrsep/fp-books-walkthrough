@@ -1,0 +1,8 @@
+<CIRCUS>  : PROGRAM*
+PROGRAM   : ID WEIGHT [<"->"> SUBLIST] <#"\n">
+<SUBLIST> : ID [<","> SUBLIST]
+WEIGHT    : <"("> number <")">
+ID        : letter+
+<letter>  : #"[a-z^\n]"
+<digit>   : #"[0-9]"
+<number>  : (digit)+
