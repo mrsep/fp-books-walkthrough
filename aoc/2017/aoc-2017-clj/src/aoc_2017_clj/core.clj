@@ -4,7 +4,8 @@
             [clojure.java.io :as io]
             [clojure.zip :as zip]
             [instaparse.core :as insta :refer [defparser]]
-            [clojure.math.combinatorics :as combo]))
+            [clojure.math.combinatorics :as combo]
+            [clojure.set :as set]))
 
 (defn string->digitseq [str]
   (map #(Character/digit % 10) (seq str)))
@@ -173,6 +174,47 @@
     :PROGRAM vector}
    (day7-parser str)))
 
+(defn children [node]
+  (or (:children node)
+      #{}))
+
+(defn branch? [loc]
+  (let [childs (children (zip/node loc))]
+    (and (set? childs)
+         (not (empty? childs)))))
+
+(defn construct-node
+  ([name] {:name name})
+  ([name weight] {:name name
+                  :weight weight})
+  ([name weight childs] {:name name
+                         :weight weight
+                         :children (into #{} childs)}))
+
+(defn make-node [node childs]
+  (println node)
+  (assoc node :children (into #{} childs)))
+
+(defn circus-zip [root-node]
+  (zip/zipper branch? children make-node root-node))
+
+(defn construct-circus-zip-tree [root program-weights program-childs]
+  (loop [loc (circus-zip (construct-node root (program-weights root)))]
+    (if (:sum (zip/node loc))
+      (if (zip/end? loc)
+        loc
+        (recur (zip/up loc)))
+      (let [p-childs (program-childs (:name (zip/node loc)))
+            z-childs (children (zip/node loc))
+            diff     (clojure.set/difference p-childs z-childs)]
+        (if (empty? diff)
+          (zip/edit loc #(assoc (zip/node %1)
+                                :sum (reduce + (map :sum %2))))
+          (recur (zip/node (zip/down
+                            (zip/make-node loc (construct-node (first diff))
+                                           (program-weights (first diff)))))))))))
+
+
 (defn day7 [str]
   (let [program-list (day7-parse str)
         program-weight (apply hash-map (flatten (map #(take 2 %) program-list)))
@@ -181,8 +223,18 @@
                          (into (hash-map) (transduce xform conj program-list)))
         program-all    (into #{} (keys program-weight))
         non-root (reduce clojure.set/union (vals program-childs))
-        root     (clojure.set/difference program-all non-root)]
-    root))
+        root     (first (clojure.set/difference program-all non-root))
+        ztree    (construct-circus-zip-tree root program-weight program-childs)]
+    ztree))
+
+
+
+
+
+
+
+
+
 
 
 (defn -main [& args]
@@ -195,7 +247,7 @@
   (println "day4:1" (day4-part1 (slurp (io/resource "input-day4.txt"))))
   (println "day4:2" (day4-part2 (slurp (io/resource "input-day4.txt"))))
   (println "day5:1" (day5-part1 (slurp (io/resource "input-day5.txt"))))
-  (println "day5:2" (day5-part2 (slurp (io/resource "input-day5.txt"))))
+  ;(println "day5:2" (day5-part2 (slurp (io/resource "input-day5.txt"))))
   (println "day6"   (day6 (slurp (io/resource "input-day6.txt"))))
-  (println "day7"   (day7 (slurp (io/resource "input-day7.txt"))))
+  (println "day7"   (day7 (slurp (io/resource "test-input-day7.txt"))))
   )
