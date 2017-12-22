@@ -1,0 +1,18 @@
+<REGISTER> : stmtlist
+stmtlist   : (stmt)*
+<stmt>     : inc-stmt | dec-stmt
+inc-stmt   : id <"inc"> integer condition
+dec-stmt   : id <"dec"> integer condition
+<condition>: <"if"> id relop integer
+relop      : (NEQ | GT | GET | EQ | LET | LT)
+id         : letter+
+<letter>   : #"[a-z]"
+<digit>    : #"[0-9]"
+integer    : ["-"] nat
+<nat>      : (digit)+
+NEQ : <"!=">
+GT  : <">">
+GET : <">=">
+EQ  : <"==">
+LET : <"<=">
+LT  : <"<">
