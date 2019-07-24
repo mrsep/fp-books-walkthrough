@@ -6,7 +6,9 @@
                                        "=" "+" ":" ";"
                                        "-" "*" "/" "^" "mod" "(" ")"
                                        "if" "then" "else"
-                                       "<" ">" "<>" "and" "or" "not"))
+                                       "<" ">" "<>" "and" "or" "not"
+                                       "gosub" "return" "for" "to" "step" "next"))
+
 (define-lex-abbrev digits (:+ (char-set "0123456789")))
 
 (define basic-lexer

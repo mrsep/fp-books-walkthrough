@@ -4,6 +4,7 @@ b-line       : b-line-num [b-statement] (/":" b-statement)* [b-rem]
 @b-line-num  : INTEGER
 @b-statement : b-end | b-print | b-goto
              | b-let | b-input | b-if
+             | b-for | b-gosub | b-next | b-return
 b-rem        : REM
 b-end        : /"end"
 b-let        : [/"let"] b-id /"=" (b-expr | STRING)
@@ -36,3 +37,8 @@ b-expt       : [b-expt "^"] b-value
 @b-value     : b-number | b-id | /"(" b-expr /")"
 @b-number    : INTEGER | DECIMAL
 
+; subroutines and loops
+b-gosub      : /"gosub" b-expr
+b-return     : /"return"
+b-for        : /"for" b-id /"=" b-expr /"to" b-expr [/"step" b-expr]
+b-next       : /"next" b-id
