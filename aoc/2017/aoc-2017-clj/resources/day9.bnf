@@ -1,0 +1,6 @@
+group   : <"{"> [(group | <garbage>)] (<","> group | <","> <garbage>)* <"}"> [eof]
+garbage : "<" (garbage-symbol | eraser)* ">"
+garbage-symbol : #"[a-z<{}]"
+eraser  : "!" erasable-symbol
+erasable-symbol : #"[a-z!{}<>]"
+eof : <#"\s">
