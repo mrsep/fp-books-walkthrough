@@ -63,9 +63,10 @@ Int answer1(const Disk& disk, Int noun, Int verb) {
 }
 
 Int answer2(const Disk& disk, Int target) {
-  for (Int noun = 0; noun < 1000; noun++) {
-    for (Int verb = 0; verb < 1000; verb++) {
+  for (Int noun = 0; noun < 100; noun++) {
+    for (Int verb = 0; verb < 100; verb++) {
       if (answer1(disk, noun, verb) == target) {
+        std::cout << "noun= " << noun << " verb= " << verb << std::endl;
         return 100*noun+verb;
       }
     }
