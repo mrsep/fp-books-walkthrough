@@ -1,13 +1,10 @@
-#include <cmath>
 #include <vector>
-#include <map>
 #include <algorithm>
 #include <numeric>
-#include <limits>
 #include <iostream>
 #include <iterator>
-#include <iomanip>
 #include <array>
+#include <chrono>
 
 using Digit = int;
 using number = std::array<Digit,6>;
@@ -62,6 +59,7 @@ bool hasExactRepetition(const number& n, const int replength = 2) {
                            { return d != adj_val; });
     if (std::distance(adj_begin, adj_end) == replength) return true;
   }
+  return false;
 }
 
 int main() {
@@ -73,15 +71,18 @@ int main() {
   int answer1 = 0;
   int answer2 = 0;
 
-  number n = init_inc(first);
+  const auto start = std::chrono::high_resolution_clock::now();
 
   for (number n = init_inc(first); n <= last; n=inc(n)) {
     answer1 += hasRepetition(n);
     answer2 += hasExactRepetition(n);
   }
+  const auto end = std::chrono::high_resolution_clock::now();
 
   std::cout << "Answer 1: " << answer1 << std::endl;
   std::cout << "Answer 2: " << answer2 << std::endl;
+
+  std::cout << "Time= " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "us\n";
 
   return 0;
 }
