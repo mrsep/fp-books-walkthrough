@@ -32,19 +32,14 @@ number incpos(number n, const int pos) {
 
 // generates the smallest larger number than the input with monotone increasing digits
 number init_inc(number n) {
-  print(n);
-  // TODO this does not work yet!
-  std::adjacent_difference(n.begin(), n.end(), n.begin(),
-                           [] (const Digit d1, const Digit d2)
-                           {
-                             Digit min, max;
-                             std::cout << d1 << std::endl;
-                             std::cout << d2 << std::endl;
-                             std::tie(min,max) = std::minmax(d1,d2);
-                             if (max == 9) return min;
-                             else          return max;
-                           });
-  print(n);
+  // find the first digit which is greater than the next digit
+  auto it = std::adjacent_find(n.begin(), n.end(),
+                               [] (const Digit d1, const Digit d2)
+                               { return d1 > d2; });
+
+  // fill the remaining digits with the value at it
+  std::fill(it, n.end(), *it);
+
   return n;
 }
 
@@ -57,22 +52,36 @@ bool hasRepetition(const number& n) {
   return std::adjacent_find(n.cbegin(), n.cend()) != n.cend();
 }
 
+bool hasExactRepetition(const number& n, const int replength = 2) {
+  for (auto adj_end = n.begin(); adj_end != n.end();) {
+    auto adj_begin = std::adjacent_find(adj_end, n.end());
+    if (adj_begin == n.end()) return false;
+    const Digit adj_val = *adj_begin;
+    adj_end = std::find_if(std::next(adj_begin), n.end(),
+                           [adj_val](const Digit d)
+                           { return d != adj_val; });
+    if (std::distance(adj_begin, adj_end) == replength) return true;
+  }
+}
+
 int main() {
   const number first = {1,0,9,1,6,5};
   const number last  = {5,7,6,7,2,3};
 
   print(first);
 
-  int count = 0;
+  int answer1 = 0;
+  int answer2 = 0;
+
   number n = init_inc(first);
 
-  return 0;
   for (number n = init_inc(first); n <= last; n=inc(n)) {
-  //if (hasRepetition(n)) print(n);
-    count += hasRepetition(n);
+    answer1 += hasRepetition(n);
+    answer2 += hasExactRepetition(n);
   }
 
-  std::cout << "Answer 1: " << count << std::endl;
+  std::cout << "Answer 1: " << answer1 << std::endl;
+  std::cout << "Answer 2: " << answer2 << std::endl;
 
   return 0;
 }

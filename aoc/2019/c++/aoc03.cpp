@@ -35,7 +35,7 @@ Disk readData(const std::string filename) {
   return result;
 }
 
-Direction convert(const Data& data) {
+Direction data2direction(const Data& data) {
        if (data.first == 'R') return {Point( 1, 0), data.second};
   else if (data.first == 'U') return {Point( 0, 1), data.second};
   else if (data.first == 'L') return {Point(-1, 0), data.second};
@@ -46,15 +46,13 @@ Direction convert(const Data& data) {
   }
 }
 
-Path convert(const Disk& input) {
+Path disk2path(const Disk& input) {
   Path result;
-  for (int i=0; i < input.size(); i++) {
-    result.push_back(convert(input[i]));
-  }
+  std::transform(input.cbegin(), input.cend(), std::back_inserter(result), data2direction);
   return result;
 }
 
-Wire convert(const Direction& dir, const Point& start) {
+Wire direction2wire(const Direction& dir, const Point& start) {
   Wire result; result.reserve(dir.second);
   for (Int i=1; i <= dir.second; i++) {
     result.push_back(start + i*dir.first);
@@ -62,10 +60,10 @@ Wire convert(const Direction& dir, const Point& start) {
   return result;
 }
 
-Wire convert(const Path& path, const Point& start) {
+Wire path2wire(const Path& path, const Point& start) {
   Wire result; result.push_back(start);
   for (const Direction& dir : path) {
-    const auto new_wire = convert(dir, result.back());
+    const Wire new_wire = direction2wire(dir, result.back());
     std::move(new_wire.begin(), new_wire.end(), std::back_inserter(result));
   }
 
@@ -94,7 +92,7 @@ Wire wireInterSection(Wire a, Wire b) {
                         std::back_inserter(result), compare);
 
   result.erase(std::remove_if(result.begin(), result.end(), [](const Point& p) { return p == Eigen::Vector2i::Zero(); }),
-             result.end());
+               result.end());
   return result;
 }
 
@@ -120,11 +118,11 @@ int main() {
   const Disk a = readData("../aoc03a.txt");
   const Disk b = readData("../aoc03b.txt");
 
-  const Path path_a = convert(a);
-  const Path path_b = convert(b);
+  const Path path_a = disk2path(a);
+  const Path path_b = disk2path(b);
 
-  const Wire wire_a = convert(path_a, Eigen::Vector2i::Zero());
-  const Wire wire_b = convert(path_b, Eigen::Vector2i::Zero());
+  const Wire wire_a = path2wire(path_a, Eigen::Vector2i::Zero());
+  const Wire wire_b = path2wire(path_b, Eigen::Vector2i::Zero());
 
   const Wire inter = wireInterSection(wire_a, wire_b);
 
