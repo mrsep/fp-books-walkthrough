@@ -33,10 +33,10 @@ Mem convert(const Disk& input) {
 }
 
 enum class OPCODE {
-  add  = 1,
-  mul  = 2,
-  in  = 3,
-  out = 4,
+  add  =  1,
+  mul  =  2,
+  in   =  3,
+  out  =  4,
   halt = 99
 };
 
@@ -88,11 +88,15 @@ std::pair<OPCODE, std::vector<ACCESS_MODE>> decode(Int code) {
     code /= Int{10};
   }
 
+  if (opcode == OPCODE::add || opcode == OPCODE::mul || opcode == OPCODE::in) {
+    modes.back() = ACCESS_MODE::immediate;
+  }
+
   return {opcode, modes};
 }
 
 void data_store(Mem& mem, const Int pos, Int val) {
-  mem[mem[pos]] = val;
+  mem[pos] = val;
 }
 
 void read(Mem& mem, Int pos) {
