@@ -37,6 +37,10 @@ enum class OPCODE {
   mul  =  2,
   in   =  3,
   out  =  4,
+  jt   =  5,
+  jf   =  6,
+  lt   =  7,
+  eq   =  8,
   halt = 99
 };
 
@@ -72,6 +76,8 @@ std::vector<Int> data_fetch(const Mem& mem, const Int ip, const std::vector<ACCE
 
 Int numPara(const OPCODE opcode) {
   if (opcode == OPCODE::add || opcode == OPCODE::mul) return 3l;
+  if (opcode == OPCODE::lt  || opcode == OPCODE::eq ) return 3l;
+  if (opcode == OPCODE::jt  || opcode == OPCODE::jf ) return 2l;
   if (opcode == OPCODE::in  || opcode == OPCODE::out) return 1l;
   if (opcode == OPCODE::halt)                         return 0l;
   else                                                return 0l;
@@ -88,7 +94,12 @@ std::pair<OPCODE, std::vector<ACCESS_MODE>> decode(Int code) {
     code /= Int{10};
   }
 
-  if (opcode == OPCODE::add || opcode == OPCODE::mul || opcode == OPCODE::in) {
+  if (opcode == OPCODE::add ||
+      opcode == OPCODE::mul ||
+      opcode == OPCODE::in  ||
+      opcode == OPCODE::lt  ||
+      opcode == OPCODE::eq)
+  {
     modes.back() = ACCESS_MODE::immediate;
   }
 
@@ -109,24 +120,35 @@ void write(Int val) {
   std::cout << val;
 }
 
-RESULT execute(Mem& mem, const OPCODE opcode, const std::vector<Int>& data) {
-       if (opcode == OPCODE::add ) { data_store(mem, data.back(), data[0] + data[1]); return RESULT::normal; }
-  else if (opcode == OPCODE::mul ) { data_store(mem, data.back(), data[0] * data[1]); return RESULT::normal; }
-  else if (opcode == OPCODE::in  ) { read(mem, data.front());                         return RESULT::normal; }
-  else if (opcode == OPCODE::out ) { write(data.front());                             return RESULT::normal; }
-  else if (opcode == OPCODE::halt) { return RESULT::halt;   }
-  else                             { return RESULT::error;  }
+void fwd(Int& ip, const OPCODE op) {
+  ip += 1+numPara(op);
+}
+
+Int get(Int ip, const OPCODE op) {
+  return ip + 1 + numPara(op);
+}
+
+RESULT execute(Mem& mem, Int& ip, const OPCODE op, const std::vector<Int>& data) {
+       if (op == OPCODE::add ) { fwd(ip,op); data_store(mem, data.back(), data[0] + data[1]);       return RESULT::normal; }
+  else if (op == OPCODE::mul ) { fwd(ip,op); data_store(mem, data.back(), data[0] * data[1]);       return RESULT::normal; }
+  else if (op == OPCODE::in  ) { fwd(ip,op); read(mem, data.front());                               return RESULT::normal; }
+  else if (op == OPCODE::out ) { fwd(ip,op); write(data.front());                                   return RESULT::normal; }
+  else if (op == OPCODE::jt  ) { ip = data.front() != 0l ? data.back() : get(ip,op);                return RESULT::normal; }
+  else if (op == OPCODE::jf  ) { ip = data.front() == 0l ? data.back() : get(ip,op);                return RESULT::normal; }
+  else if (op == OPCODE::lt  ) { fwd(ip,op); data_store(mem, data.back(), Int(data[0]  < data[1])); return RESULT::normal; }
+  else if (op == OPCODE::eq  ) { fwd(ip,op); data_store(mem, data.back(), Int(data[0] == data[1])); return RESULT::normal; }
+  else if (op == OPCODE::halt) { return RESULT::halt;   }
+  else                         { return RESULT::error;  }
 }
 
 bool run(Mem& mem, Int ip_) {
   OPCODE op = OPCODE::halt;
   std::vector<ACCESS_MODE> modes;
 
-  for (Int num_para = 0, ip = ip_; ; ip += 1+num_para) {
+  for (Int ip = ip_; ;) {
     std::tie(op,modes) = decode(op_fetch(mem, ip));
-    num_para = numPara(op);
 
-    const RESULT result = execute(mem, op, data_fetch(mem, ip, modes));
+    const RESULT result = execute(mem, ip, op, data_fetch(mem, ip, modes));
     if (result == RESULT::normal) continue;
     if (result == RESULT::halt  ) return true;
     if (result == RESULT::error ) return false;
@@ -134,7 +156,7 @@ bool run(Mem& mem, Int ip_) {
   return true;
 }
 
-void answer1(const Disk& disk) {
+void answer(const Disk& disk) {
   Mem mem = convert(disk);
 
   if (!run(mem, Int{0})) {
