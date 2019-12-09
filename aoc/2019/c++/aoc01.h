@@ -10,6 +10,8 @@
 using mass_t = long long;
 using fuel_t = long long;
 
+using Data = std::vector<mass_t>;
+
 std::vector<mass_t> readData(const std::string filename) {
   std::vector<mass_t> result;
 
@@ -36,4 +38,28 @@ fuel_t computeFuelFuel(mass_t mass, fuel_t total_fuel) {
 
 fuel_t computeTotalFuel(mass_t mass) {
   return computeFuelFuel(mass, fuel_t{});
+}
+
+fuel_t answer1() {
+  const Data data = readData("../aoc01.txt");
+
+  std::vector<fuel_t> fuel; fuel.reserve(data.size());
+  std::transform(data.cbegin(), data.cend(),
+                 std::back_inserter(fuel), &computeFuel);
+
+  const fuel_t total_fuel = std::accumulate(fuel.cbegin(), fuel.cend(), fuel_t{});
+
+  return total_fuel;
+}
+
+fuel_t answer2() {
+  const Data data = readData("../aoc01.txt");
+
+  std::vector<fuel_t> fuel; fuel.reserve(data.size());
+  std::transform(data.cbegin(), data.cend(),
+                 std::back_inserter(fuel), &computeTotalFuel);
+
+  const fuel_t total_fuel = std::accumulate(fuel.cbegin(), fuel.cend(), fuel_t{});
+
+  return total_fuel;
 }

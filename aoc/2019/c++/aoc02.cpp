@@ -1,22 +1,29 @@
 #include "aoc02.h"
 
-int main() {
+#define CATCH_CONFIG_MAIN
+#include "catch2/catch.hpp"
+
+TEST_CASE("question 1", "[aoc02]") {
   const Disk disk = readData("../aoc02.txt");
-  //for (const auto i : disk) { std::cout << i << std::endl; }
 
-  std::cout << "Answer 1: " << answer1(disk, 12, 2) << std::endl;
-  std::cout << "Answer 2: " << answer2(disk, 19690720) << std::endl;
-
-  return 0;
+  REQUIRE(answer1(disk, 12, 2) == 3101844);
 }
 
-void test() {
-  const std::vector<Int> test1{ 1,9,10,3, 2,3,11,0, 99, 30,40,50 };
+TEST_CASE("question 2", "[aoc02]") {
+  const Disk disk = readData("../aoc02.txt");
 
-  auto mem1 = convert(test1);
+  REQUIRE(answer2(disk, 19690720) == 8478);
+}
 
-  if (!execute(mem1, Int{})) {
-    std::cerr << "something went wrong!" << std::endl;
-  }
-  //for (const auto i : mem1) { std::cout << i.second << std::endl; }
+TEST_CASE("example 1", "[aoc02]") {
+  const Disk disk{ 1,9,10,3, 2,3,11,0, 99, 30,40,50 };
+
+  auto mem = convert(disk);
+
+  const Mem result{{0,3500}, {1, 9}, { 2,10}, { 3,70},
+                   {4,   2}, {5, 3}, { 6,11}, { 7, 0},
+                   {8,  99}, {9,30}, {10,40}, {11,50}};
+
+  REQUIRE(execute(mem, Int{}) == true);
+  REQUIRE(mem == result);
 }
