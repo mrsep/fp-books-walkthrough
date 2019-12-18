@@ -18,10 +18,10 @@ Disk readData(const std::string filename) {
 
   std::ifstream ifs{filename};
   if (ifs) {
-    std::string token;
-    while(std::getline(ifs, token, ',')) {
-      result.push_back(std::stol(token));
-    }
+    std::transform(std::istreambuf_iterator<char>(ifs),
+                   std::istreambuf_iterator<char>(),
+                   std::back_inserter(result),
+                   [](char c) { return c - '0'; });
   }
 
   return result;
@@ -32,7 +32,9 @@ using Layer = Eigen::Matrix<T, width, height, Eigen::RowMajor>;
 
 template <int width, int height, typename T = Int>
 struct SpaceImage {
-  std::vector<Layer<width, height, T>> layers;
+  using Layer_t = Layer<width, height, T>;
+
+  std::vector<Layer_t> layers;
 
   static std::size_t numPixels() { return width*height; }
   static SpaceImage read(const Disk& disk);
@@ -57,9 +59,18 @@ SpaceImage<width, height, T> SpaceImage<width, height, T>::read(const Disk& disk
 }
 
 int answer1() {
+  using SI = SpaceImage<25,6>;
   const Disk disk = readData("../aoc08.txt");
-  const auto image = SpaceImage<25,6>::read(disk);
+  const auto image = SI::read(disk);
 
-  std::vector<std::size_t> num_zeros();
-  return 0;
+  std::vector<std::size_t> num_zeros; num_zeros.reserve(image.layers.size());
+  std::transform(image.layers.cbegin(), image.layers.cend(), std::back_inserter(num_zeros),
+                 [](const SI::Layer_t& layer)
+                 { return (layer.array() == 0).count(); });
+
+  const SI::Layer_t& layer = image.layers[std::distance(num_zeros.cbegin(),
+                                                        std::min_element(num_zeros.cbegin(),
+                                                                         num_zeros.cend()))];
+
+  return (layer.array() == 1).count() * (layer.array() == 2).count();
 }
