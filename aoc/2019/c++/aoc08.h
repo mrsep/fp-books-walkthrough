@@ -40,9 +40,12 @@ template<typename Scalar> struct pixelFold {
     // 1,0     -> 1
     // 0,1     -> 0
     const auto minmax = std::minmax(left,right);
-    return (minmax.second == 2)
+    const bool transparent = (minmax.second == 2);
+    return transparent
       ? minmax.first
       : left;
+    //return transparent * minmax.first
+    //    + !transparent * left;
   }
 };
 
@@ -73,14 +76,16 @@ Layer<width,height,T> SpaceImage<width, height, T>::transparent = Layer_t::Const
 
 template <int width, int height, typename T>
 SpaceImage<width, height, T> SpaceImage<width, height, T>::read(const Disk& disk) {
+  using SI = SpaceImage<width, height, T>;
+
   const auto size = disk.size();
-  const auto num_pixels = SpaceImage<width,height, T>::numPixels();
+  const auto num_pixels = SI::numPixels();
   const auto num_layers = size / num_pixels;
 
-  SpaceImage<width, height, T> result; result.layers.resize(num_layers);
+  SI result; result.layers.resize(num_layers);
 
   for (std::size_t l = 0; l < num_layers; ++l) {
-    Eigen::Map<const Layer<width, height, T>> view(&( disk.data()[l*num_pixels] ));
+    Eigen::Map<const SI::Layer_t> view(&( disk.data()[l*num_pixels] ));
 
     result.layers[l] = view;
   }
