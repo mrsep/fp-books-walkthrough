@@ -17,11 +17,12 @@ public:
   using Mem  = std::map<Int,Int>;
 
 private:
+  Int ip;
   Mem mem;
+  Int output;
 
 public:
   std::vector<Int> input;
-  std::vector<Int> output;
   Int input_index;
 
 public:
@@ -29,10 +30,16 @@ public:
     : IntCode(disk, {}) {}
 
   IntCode(const Disk& disk, const std::vector<Int>& input)
-    : mem(convert(disk))
+    : ip(0)
+    , mem(convert(disk))
     , input(input)
     , input_index(0)
-    , output() {}
+    , output(0) {}
+
+  void setInput(const std::vector<Int>& in) {
+    input       = in;
+    input_index = 0;
+  }
 
   static Disk readData(const std::string filename) {
     Disk result;
@@ -74,7 +81,8 @@ public:
   enum class RESULT {
     normal,
     halt,
-    error
+    error,
+    pause
   };
 
   Int op_fetch(const Int ip) const {
@@ -133,12 +141,13 @@ public:
   }
 
   void read(Int pos) {
-    const Int val = input[input_index++];
+    const Int val = input[input_index % 2];
     data_store(pos, val);
+    ++input_index;
   }
 
   void write(Int val) {
-    output.push_back(val);
+    output = val;
   }
 
   static void fwd(Int& ip, const OPCODE op) {
@@ -153,7 +162,7 @@ public:
          if (op == OPCODE::add ) { fwd(ip,op); data_store(data.back(), data[0] + data[1]);       return RESULT::normal; }
     else if (op == OPCODE::mul ) { fwd(ip,op); data_store(data.back(), data[0] * data[1]);       return RESULT::normal; }
     else if (op == OPCODE::in  ) { fwd(ip,op); read(data.front());                               return RESULT::normal; }
-    else if (op == OPCODE::out ) { fwd(ip,op); write(data.front());                              return RESULT::normal; }
+    else if (op == OPCODE::out ) { fwd(ip,op); write(data.front());                              return RESULT::pause ; }
     else if (op == OPCODE::jt  ) { ip = data.front() != 0l ? data.back() : get(ip,op);           return RESULT::normal; }
     else if (op == OPCODE::jf  ) { ip = data.front() == 0l ? data.back() : get(ip,op);           return RESULT::normal; }
     else if (op == OPCODE::lt  ) { fwd(ip,op); data_store(data.back(), Int(data[0]  < data[1])); return RESULT::normal; }
@@ -162,19 +171,17 @@ public:
     else                         { return RESULT::error;  }
   }
 
-  bool run(Int ip_) {
+  std::pair<RESULT,Int> run() {
     OPCODE op = OPCODE::halt;
     std::vector<ACCESS_MODE> modes;
 
-    for (Int ip = ip_; ;) {
+    while (true) {
       std::tie(op,modes) = decode(op_fetch(ip));
 
       const RESULT result = execute(ip, op, data_fetch(ip, modes));
       if (result == RESULT::normal) continue;
-      if (result == RESULT::halt  ) return true;
-      if (result == RESULT::error ) return false;
+      return {result, output};
     }
-    return true;
   }
 };
 
@@ -182,20 +189,50 @@ using IC = IntCode<long>;
 using Int = IC::Int;
 
 Int answer1() {
+  const IC init(IC::readData("../aoc07.txt"));
   Int best = 0;
   Int prev = 0;
 
   std::vector<Int> perm{0,1,2,3,4};
   do {
-
     for (const Int phase : perm) {
-      const std::vector<Int> input = {phase, prev};
-      IC ic(IC::readData("../aoc07.txt"), input);
-      ic.run(Int{});
-      prev = ic.output.back();
+      IC ic{init};
+      ic.setInput(std::vector<Int>{phase, prev});
+      prev = ic.run().second;
     }
 
     best = std::max(best, prev);
+    prev = 0;
+  } while (std::next_permutation(perm.begin(), perm.end()));
+
+  return best;
+}
+
+Int answer2() {
+  Int best = 0;
+  Int prev = 0;
+  IC::RESULT result = IC::RESULT::normal;
+  const IC init(IC::readData("../aoc07.txt"));
+  //const IC init(IC::Disk{3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5});
+
+  std::vector<Int> perm{5,6,7,8,9};
+
+  do {
+    std::vector<IC> ics(5, init);
+
+    for (Int i = 0; ; i++) {
+      const Int phase = perm[i % 5];
+      IC&          ic =  ics[i % 5];
+      ic.setInput((i <= 4)
+                  ? std::vector<Int>{phase,prev}
+                  : std::vector<Int>{prev});
+
+      std::tie(result,prev) = ic.run();
+
+      best = std::max(best, prev);
+      if (result == IC::RESULT::halt) break;
+    }
+
     prev = 0;
   } while (std::next_permutation(perm.begin(), perm.end()));
 
