@@ -104,7 +104,7 @@ public:
       else if (m == ACCESS_MODE::immediate)
         result.push_back(mem.at(ip+1+i));
       else if (m == ACCESS_MODE::relative)
-        result.push_back(base_pointer + mem.at(ip+1+i));
+        result.push_back(mem.at(base_pointer + mem.at(ip+1+i)));
       else
         std::cerr << "Unknown access mode!\n";
     }
@@ -135,7 +135,7 @@ public:
 
     if (opcode == OPCODE::add ||
         opcode == OPCODE::mul ||
-        opcode == OPCODE::in  || // TODO maybe not
+        //opcode == OPCODE::in  || // TODO maybe not
         opcode == OPCODE::lt  ||
         opcode == OPCODE::eq)
     {
@@ -176,7 +176,7 @@ public:
     else if (op == OPCODE::jf  ) { ip = data.front() == 0l ? data.back() : get(ip,op);           return RESULT::normal; }
     else if (op == OPCODE::lt  ) { fwd(ip,op); data_store(data.back(), Int(data[0]  < data[1])); return RESULT::normal; }
     else if (op == OPCODE::eq  ) { fwd(ip,op); data_store(data.back(), Int(data[0] == data[1])); return RESULT::normal; }
-    else if (op == OPCODE::abp ) { fwd(ip,op); base_pointer = data.front();                      return RESULT::normal; }
+    else if (op == OPCODE::abp ) { fwd(ip,op); base_pointer += data.front();                      return RESULT::normal; }
     else if (op == OPCODE::halt) { return RESULT::halt;   }
     else                         { return RESULT::error;  }
   }
