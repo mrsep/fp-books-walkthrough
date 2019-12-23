@@ -95,16 +95,16 @@ public:
     return mem.at(ip);
   }
 
-  std::vector<Int> data_fetch(const Int ip, const std::vector<ACCESS_MODE>& modes) const {
+  std::vector<Int> data_fetch(const Int ip, const std::vector<ACCESS_MODE>& modes) {
     std::vector<Int> result; result.reserve(modes.size());
     for (std::size_t i=0; i<modes.size(); ++i) {
       const ACCESS_MODE m = modes[i];
            if (m == ACCESS_MODE::position)
-        result.push_back(mem.at(mem.at(ip+1+i)));
+        result.push_back(mem[ip+1+i]);
       else if (m == ACCESS_MODE::immediate)
-        result.push_back(mem.at(ip+1+i));
+        result.push_back(ip+1+i);
       else if (m == ACCESS_MODE::relative)
-        result.push_back(mem.at(base_pointer + mem.at(ip+1+i)));
+        result.push_back(base_pointer + mem[ip+1+i]);
       else
         std::cerr << "Unknown access mode!\n";
     }
@@ -133,30 +133,21 @@ public:
       code /= Int{10};
     }
 
-    if (opcode == OPCODE::add ||
-        opcode == OPCODE::mul ||
-        //opcode == OPCODE::in  || // TODO maybe not
-        opcode == OPCODE::lt  ||
-        opcode == OPCODE::eq)
-    {
-      modes.back() = ACCESS_MODE::immediate;
-    }
-
     return {opcode, modes};
   }
 
-  void data_store(const Int pos, Int val) {
+  void data_store(const Int pos, const Int val) {
     mem[pos] = val;
   }
 
-  void read(Int pos) {
-    const Int val = input[input_index % 2];
-    data_store(pos, val);
+  void read(const std::vector<Int>& data) {
+    const Int val = input[input_index];
+    data_store(data.front(), val);
     ++input_index;
   }
 
-  void write(Int val) {
-    output = val;
+  void write(const std::vector<Int>& data) {
+    output = mem[data.front()];
   }
 
   static void fwd(Int& ip, const OPCODE op) {
@@ -167,16 +158,44 @@ public:
     return ip + 1 + numPara(op);
   }
 
+  void add(const std::vector<Int> &data) {
+    data_store(data.back(), mem[data[0]] + mem[data[1]]);
+  }
+
+  void mul(const std::vector<Int>& data) {
+    data_store(data.back(), mem[data[0]] * mem[data[1]]);
+  }
+
+  Int jump_true(const std::vector<Int>& data) {
+    return mem[data.front()] != Int{0} ? mem[data.back()] : get(ip, OPCODE::jt);
+  }
+
+  Int jump_false(const std::vector<Int>& data) {
+    return mem[data.front()] == Int{0} ? mem[data.back()] : get(ip,OPCODE::jf);
+  }
+
+  void less_than(const std::vector<Int>& data) {
+    data_store(data.back(), Int{mem[data[0]] < mem[data[1]]});
+  }
+
+  void equal(const std::vector<Int>& data) {
+    data_store(data.back(), Int{mem[data[0]] == mem[data[1]]});
+  }
+
+  void set_bp(const std::vector<Int>& data) {
+    base_pointer += mem[data.front()];
+  }
+
   RESULT execute(Int& ip, const OPCODE op, const std::vector<Int>& data) {
-         if (op == OPCODE::add ) { fwd(ip,op); data_store(data.back(), data[0] + data[1]);       return RESULT::normal; }
-    else if (op == OPCODE::mul ) { fwd(ip,op); data_store(data.back(), data[0] * data[1]);       return RESULT::normal; }
-    else if (op == OPCODE::in  ) { fwd(ip,op); read(data.front());                               return RESULT::normal; }
-    else if (op == OPCODE::out ) { fwd(ip,op); write(data.front());                              return RESULT::pause ; }
-    else if (op == OPCODE::jt  ) { ip = data.front() != 0l ? data.back() : get(ip,op);           return RESULT::normal; }
-    else if (op == OPCODE::jf  ) { ip = data.front() == 0l ? data.back() : get(ip,op);           return RESULT::normal; }
-    else if (op == OPCODE::lt  ) { fwd(ip,op); data_store(data.back(), Int(data[0]  < data[1])); return RESULT::normal; }
-    else if (op == OPCODE::eq  ) { fwd(ip,op); data_store(data.back(), Int(data[0] == data[1])); return RESULT::normal; }
-    else if (op == OPCODE::abp ) { fwd(ip,op); base_pointer += data.front();                      return RESULT::normal; }
+         if (op == OPCODE::add ) { fwd(ip,op); add(data);       return RESULT::normal; }
+    else if (op == OPCODE::mul ) { fwd(ip,op); mul(data);       return RESULT::normal; }
+    else if (op == OPCODE::in  ) { fwd(ip,op); read(data);      return RESULT::normal; }
+    else if (op == OPCODE::out ) { fwd(ip,op); write(data);     return RESULT::pause ; }
+    else if (op == OPCODE::jt  ) { ip = jump_true(data);        return RESULT::normal; }
+    else if (op == OPCODE::jf  ) { ip = jump_false(data);       return RESULT::normal; }
+    else if (op == OPCODE::lt  ) { fwd(ip,op); less_than(data); return RESULT::normal; }
+    else if (op == OPCODE::eq  ) { fwd(ip,op); equal(data);     return RESULT::normal; }
+    else if (op == OPCODE::abp ) { fwd(ip,op); set_bp(data);    return RESULT::normal; }
     else if (op == OPCODE::halt) { return RESULT::halt;   }
     else                         { return RESULT::error;  }
   }
@@ -199,6 +218,12 @@ using IC = IntCode<long long>;
 using Int = IC::Int;
 
 Int answer1() {
-  IC ic(IC::readData("../aoc09.txt"), std::vector<Int>{1});
+  IC ic(IC::readData("../aoc09.txt"), std::vector<Int>{1l});
+  // IC ic(std::vector<Int>{1102,34915192,34915192,7,4,7,99,0});
+  return ic.run().second;
+}
+
+Int answer2() {
+  IC ic(IC::readData("../aoc09.txt"), std::vector<Int>{2l});
   return ic.run().second;
 }
