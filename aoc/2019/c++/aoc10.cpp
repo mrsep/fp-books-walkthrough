@@ -6,6 +6,6 @@ int main() {
   const int detections = a_n.second;
 
   std::cout << "Answer1: Best asteroid= (" << asteroid(0) << ',' << asteroid(1) << ") with #detections= " << detections << std::endl;
-  //std::cout << "Answer2= " << answer2() << std::endl;
+  std::cout << "Answer2= " << answer2() << std::endl;
   return 0;
 }

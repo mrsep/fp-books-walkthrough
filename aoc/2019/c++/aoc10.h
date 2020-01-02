@@ -56,12 +56,12 @@ Space disk2space(const Disk& disk) {
   return space;
 }
 
-std::vector<Coord> asteroidsInSpace(const Space& space) {
+std::vector<Coord> asteroidsInSpace(const Space& space, const Coord& base = Coord::Zero()) {
   std::vector<Coord> result;
   for (int i=0; i<space.rows(); i++) {
     for (int j=0; j<space.cols(); j++) {
       if (space.coeff(i,j)) {
-        result.push_back({i,j});
+        result.push_back(Eigen::Vector2i{i,j} - base);
       }
     }
   }
@@ -86,16 +86,14 @@ bool isDetectable(const Coord& a, const Coord& q, const Space& space) {
   return false;
 }
 
-std::pair<Coord,int> answer1() {
-  const Disk disk = readData("../aoc10.txt");
-  const Space space = disk2space(disk);
-
+std::pair<Coord, int> answer1(const Space& space) {
   const auto asteroids = asteroidsInSpace(space);
 
-  std::vector<std::vector<Coord>> detections{asteroids.size(), std::vector<Coord>{}};
-  for (const auto& a : asteroids) {
+  std::vector<std::vector<Coord>> detections{asteroids.size(),
+                                              std::vector<Coord>{}};
+  for (const auto &a : asteroids) {
     std::vector<Coord> a_detect;
-    for (const auto& q : asteroids) {
+    for (const auto &q : asteroids) {
       if (a != q && isDetectable(a, q, space)) {
         a_detect.push_back(q);
       }
@@ -106,9 +104,62 @@ std::pair<Coord,int> answer1() {
   const int best_index =
       std::distance(detections.cbegin(),
                     std::max_element(detections.cbegin(), detections.cend(),
-                                     [](const std::vector<Coord> &a,
-                                        const std::vector<Coord> &b)
-                                     { return a.size() < b.size(); }));
+                                      [](const std::vector<Coord> &a,
+                                        const std::vector<Coord> &b) {
+                                        return a.size() < b.size();
+                                      }));
 
   return {asteroids[best_index], detections[best_index].size()};
+}
+
+std::pair<Coord, int> answer1() {
+  const Disk disk = readData("../aoc10.txt");
+  const Space space = disk2space(disk);
+
+  return answer1(space);
+}
+
+double angle(const Coord &c) {
+  return -std::atan2(c(0), c(1));
+}
+
+struct CoordAngleLess {
+  bool operator()(const Coord& a_, const Coord& b_) noexcept {
+    const Coord a = reduce(a_);
+    const Coord b = reduce(b_);
+    return angle(a) < angle(b);
+  }
+};
+
+int answer2() {
+  const Disk disk = readData("../aoc10.txt");
+  const Space orig_space = disk2space(disk);
+
+  const auto asteroid = answer1(orig_space).first;
+
+  std::vector<Coord> sequence;
+
+  Space space{orig_space}; space(asteroid(0), asteroid(1)) = false;
+  while (true) {
+    std::vector<Coord> local_sequence;
+    auto coordinates = asteroidsInSpace(space, asteroid);
+    if (coordinates.empty()) break;
+    std::sort(coordinates.begin(), coordinates.end(), CoordAngleLess{});
+
+    for (const auto& a : coordinates) {std::cout << a(0) << ", " << a(1) << " angle=" << angle(a) << std::endl;}
+
+    for (const auto& c : coordinates) {
+      const Coord a = asteroid + c;
+      if (isDetectable(asteroid, a, space)) {
+        local_sequence.push_back(a);
+      }
+    }
+    for (const auto& a : local_sequence) {
+      sequence.push_back(a);
+      space(a(0), a(1)) = false;
+    }
+  }
+
+  //for (const auto& a : sequence) {std::cout << a(0) << ", " << a(1) << std::endl;}
+  return sequence[199](1)*100 + sequence[199](0);
 }
