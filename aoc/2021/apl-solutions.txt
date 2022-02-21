@@ -1,8 +1,0 @@
-# day01
-
-data ← a ← ⍎¨⊃⎕NGET '/Users/sep/ws/repos/fp-books-walkthrough/aoc/2021/day01.txt' 1
-SOL01a ← +/0 > 2-/data
-SOL01b ← +/0 > 2-/3+/data
-
-# day02
-data ← ⊃⎕NGET '/Users/sep/ws/repos/fp-books-walkthrough/aoc/2021/day02.txt' 1
