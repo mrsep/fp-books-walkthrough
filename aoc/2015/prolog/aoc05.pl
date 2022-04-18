@@ -3,6 +3,7 @@
 :- use_module(library(dcgs)).
 :- use_module(library(lists)).
 
+% parse file into list of lines
 lines([])     --> call(eos), !.
 lines([L|Ls]) --> line(L), lines(Ls).
 

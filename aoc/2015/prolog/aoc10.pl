@@ -6,8 +6,8 @@
 :- set_prolog_flag(double_quotes,chars).
 
 digitlist([Digit|Ds]) --> [D],
-                       { char_type(D, digit(Digit)) }, !,%, number_chars(Digit, [D]) }, !,
-                       digitlist(Ds).
+                          { char_type(D, digit(Digit)) }, !,
+                          digitlist(Ds).
 digitlist([]) --> [].
 
 pair_list(Char-N, [N,Char]).
