@@ -12,6 +12,7 @@
 % adjustments for parsing
 % support circular TSP
 % remove inv edges, since all data is given
+% also count reverse edge happiness
 
 % parse file into list of lines
 lines([])     --> call(eos), !.
